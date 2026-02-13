@@ -64,7 +64,7 @@ export class SchemaService {
       )
     `);
 
-    const table = await this.getTable(Number(result.lastInsertRowid));
+    const table = await this.getTable(Number(result.lastID));
     this.fastify.log.info({ tableId: table?.id, tableName: data.name }, 'Table created');
     
     return table!;
@@ -141,18 +141,22 @@ export class SchemaService {
       ]
     );
 
+    // SQLite limitation: Cannot add UNIQUE columns via ALTER TABLE
+    if (data.is_unique) {
+      throw new BadRequestError('Cannot add UNIQUE constraint to existing table. SQLite does not support this via ALTER TABLE.');
+    }
+
     // Add column to actual database table
     const sqlType = dataTypeMappings[data.data_type];
     const constraints = [];
     if (data.is_required) constraints.push('NOT NULL');
-    if (data.is_unique) constraints.push('UNIQUE');
     if (data.default_value) constraints.push(`DEFAULT '${data.default_value}'`);
 
     await this.fastify.db.exec(
       `ALTER TABLE "${table.name}" ADD COLUMN "${data.name}" ${sqlType} ${constraints.join(' ')}`
     );
 
-    const column = await this.getColumn(Number(result.lastInsertRowid));
+    const column = await this.getColumn(Number(result.lastID));
     this.fastify.log.info({ columnId: column?.id, tableName: table.name, columnName: data.name }, 'Column created');
     
     return column!;

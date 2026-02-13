@@ -5,9 +5,18 @@ import cors from '@fastify/cors';
 import { appConfig } from './config/index.js';
 import databasePlugin from './plugins/database.js';
 import swaggerPlugin from './plugins/swagger.js';
+import dynamicRoutesPlugin from './plugins/dynamic-routes.js';
 import tableRoutes from './routes/tables.js';
+import { DynamicRoutesService } from './services/dynamic-routes.service.js';
 import { AppError } from './errors/index.js';
 import { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
+
+// Extend Fastify instance with custom properties
+declare module 'fastify' {
+  interface FastifyInstance {
+    dynamicRoutes: DynamicRoutesService;
+  }
+}
 
 // Create Fastify instance
 const fastify = Fastify({
@@ -35,6 +44,7 @@ fastify.register(cors, {
 });
 
 fastify.register(databasePlugin);
+fastify.register(dynamicRoutesPlugin); // Load dynamic routes after database
 fastify.register(swaggerPlugin);
 
 // Health check

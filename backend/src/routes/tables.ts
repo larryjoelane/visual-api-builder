@@ -124,6 +124,10 @@ const tableRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       const table = await schemaService.createTable(request.body);
+      
+      // Refresh dynamic routes to register CRUD endpoints for new table
+      await fastify.dynamicRoutes.refreshRoutes();
+      
       return reply.code(201).send({ data: table });
     }
   );
@@ -149,6 +153,10 @@ const tableRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       await schemaService.deleteTable(request.params.id);
+      
+      // Refresh dynamic routes to unregister endpoints for deleted table
+      await fastify.dynamicRoutes.refreshRoutes();
+      
       return reply.code(204).send();
     }
   );
@@ -197,6 +205,10 @@ const tableRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       const column = await schemaService.createColumn(request.body);
+      
+      // Refresh dynamic routes to update schemas with new column
+      await fastify.dynamicRoutes.refreshRoutes();
+      
       return reply.code(201).send({ data: column });
     }
   );
@@ -222,6 +234,10 @@ const tableRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       await schemaService.deleteColumn(request.params.id);
+      
+      // Refresh dynamic routes to update schemas without deleted column
+      await fastify.dynamicRoutes.refreshRoutes();
+      
       return reply.code(204).send();
     }
   );

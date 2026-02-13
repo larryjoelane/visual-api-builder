@@ -4,6 +4,11 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { apiClient } from '../../services/api-client.js';
 import type { TableSchema, ColumnSchema, DataType } from '../../types/api.types.js';
+import '../data/data-grid.js';
+import '../data/row-form.js';
+import type { RowFormData } from '../data/row-form.js';
+
+type Tab = 'schema' | 'data';
 
 @customElement('table-designer')
 export class TableDesigner extends LitElement {
@@ -14,6 +19,9 @@ export class TableDesigner extends LitElement {
   @state() private _isLoading = false;
   @state() private _error: string | null = null;
   @state() private _showAddColumn = false;
+  @state() private _activeTab: Tab = 'schema';
+  @state() private _showRowForm = false;
+  @state() private _editingRow: RowFormData | null = null;
   @state() private _newColumn = {
     name: '',
     data_type: 'string' as DataType,
@@ -276,6 +284,76 @@ export class TableDesigner extends LitElement {
       border-radius: var(--radius-md);
       margin-bottom: 1rem;
     }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid var(--color-border);
+    }
+
+    .tab {
+      padding: 0.75rem 1.5rem;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--color-text-secondary);
+      font-size: 0.9375rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: -2px;
+    }
+
+    .tab:hover {
+      color: var(--color-primary);
+    }
+
+    .tab.active {
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: var(--radius-lg);
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .add-row-btn {
+      padding: 0.625rem 1.25rem;
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 1rem;
+    }
+
+    .add-row-btn:hover {
+      background: var(--color-primary-hover);
+    }
   `;
 
   connectedCallback() {
@@ -285,6 +363,8 @@ export class TableDesigner extends LitElement {
 
   updated(changedProperties: Map<string, any>) {
     if (changedProperties.has('tableId')) {
+      this._activeTab = 'schema';
+      this._showRowForm = false;
       this.loadTable();
     }
   }
@@ -359,6 +439,8 @@ export class TableDesigner extends LitElement {
       return html`<div class="error">Table not found</div>`;
     }
 
+    const userColumns = this._columns.filter(c => !['id', 'created_at', 'updated_at'].includes(c.name));
+
     return html`
       <div class="designer-container">
         ${this._error ? html`<div class="error">${this._error}</div>` : ''}
@@ -370,118 +452,196 @@ export class TableDesigner extends LitElement {
           </div>
         </div>
 
-        <div class="columns-section">
-          <div class="section-header">
-            <h3>Columns</h3>
-            <button class="add-column-btn" @click=${this._toggleAddColumn}>
-              + Add Column
-            </button>
-          </div>
+        <div class="tabs">
+          <button 
+            class="tab ${this._activeTab === 'schema' ? 'active' : ''}"
+            @click=${() => this._activeTab = 'schema'}
+          >
+            Schema
+          </button>
+          <button 
+            class="tab ${this._activeTab === 'data' ? 'active' : ''}"
+            @click=${() => this._activeTab = 'data'}
+          >
+            Data
+          </button>
+        </div>
 
-          ${this._showAddColumn
-            ? html`
-                <div class="add-column-form">
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label>Column Name</label>
-                      <input
-                        type="text"
-                        placeholder="e.g., email, name"
-                        .value=${this._newColumn.name}
-                        @input=${(e: Event) =>
-                          (this._newColumn.name = (e.target as HTMLInputElement).value)}
-                      />
-                    </div>
-                    <div class="form-group">
-                      <label>Data Type</label>
-                      <select
-                        .value=${this._newColumn.data_type}
-                        @change=${(e: Event) =>
-                          (this._newColumn.data_type = (e.target as HTMLSelectElement).value as DataType)}
-                      >
-                        <option value="string">String</option>
-                        <option value="text">Text</option>
-                        <option value="number">Number</option>
-                        <option value="decimal">Decimal</option>
-                        <option value="boolean">Boolean</option>
-                        <option value="date">Date</option>
-                        <option value="datetime">DateTime</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="form-row">
-                    <div class="checkbox-group">
-                      <input
-                        type="checkbox"
-                        id="required"
-                        .checked=${this._newColumn.is_required}
-                        @change=${(e: Event) =>
-                          (this._newColumn.is_required = (e.target as HTMLInputElement).checked)}
-                      />
-                      <label for="required">Required</label>
-                    </div>
-                    <div class="checkbox-group">
-                      <input
-                        type="checkbox"
-                        id="unique"
-                        .checked=${this._newColumn.is_unique}
-                        @change=${(e: Event) =>
-                          (this._newColumn.is_unique = (e.target as HTMLInputElement).checked)}
-                      />
-                      <label for="unique">Unique</label>
-                    </div>
-                  </div>
-                  <div class="form-actions">
-                    <button class="btn btn-secondary" @click=${this._toggleAddColumn}>
-                      Cancel
-                    </button>
-                    <button 
-                      class="btn btn-primary" 
-                      @click=${this._handleAddColumn}
-                      ?disabled=${!this._newColumn.name.trim()}
-                    >
-                      Add Column
-                    </button>
-                  </div>
-                </div>
-              `
-            : ''}
+        ${this._activeTab === 'schema' ? html`
+          <div class="columns-section">
+            <div class="section-header">
+              <h3>Columns</h3>
+              <button class="add-column-btn" @click=${this._toggleAddColumn}>
+                + Add Column
+              </button>
+            </div>
 
-          <div class="columns-list">
-            ${this._columns.length === 0
-              ? html`<div class="empty-state">
-                  No columns yet. Add a column to define your data structure.
-                </div>`
-              : this._columns.map(
-                  (column) => html`
-                    <div class="column-card">
-                      <div class="column-info">
-                        <div class="column-name">${column.name}</div>
-                        <div class="column-meta">
-                          ${column.display_name || ''}
-                        </div>
+            ${this._showAddColumn
+              ? html`
+                  <div class="add-column-form">
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label>Column Name</label>
+                        <input
+                          type="text"
+                          placeholder="e.g., email, name"
+                          .value=${this._newColumn.name}
+                          @input=${(e: Event) => {
+                            this._newColumn = {
+                              ...this._newColumn,
+                              name: (e.target as HTMLInputElement).value
+                            };
+                          }}
+                        />
                       </div>
-                      <div class="column-badges">
-                        <span class="badge badge-type">${column.data_type}</span>
-                        ${column.is_required
-                          ? html`<span class="badge badge-required">Required</span>`
-                          : ''}
-                        ${column.is_unique
-                          ? html`<span class="badge badge-unique">Unique</span>`
-                          : ''}
+                      <div class="form-group">
+                        <label>Data Type</label>
+                        <select
+                          .value=${this._newColumn.data_type}
+                          @change=${(e: Event) => {
+                            this._newColumn = {
+                              ...this._newColumn,
+                              data_type: (e.target as HTMLSelectElement).value as DataType
+                            };
+                          }}
+                        >
+                          <option value="string">String</option>
+                          <option value="text">Text</option>
+                          <option value="number">Number</option>
+                          <option value="decimal">Decimal</option>
+                          <option value="boolean">Boolean</option>
+                          <option value="date">Date</option>
+                          <option value="datetime">DateTime</option>
+                        </select>
                       </div>
-                      <button
-                        class="delete-btn"
-                        @click=${() => this._handleDeleteColumn(column)}
+                    </div>
+                    <div class="form-row">
+                      <div class="checkbox-group">
+                        <input
+                          type="checkbox"
+                          id="required"
+                          .checked=${this._newColumn.is_required}
+                          @change=${(e: Event) => {
+                            this._newColumn = {
+                              ...this._newColumn,
+                              is_required: (e.target as HTMLInputElement).checked
+                            };
+                          }}
+                        />
+                        <label for="required">Required</label>
+                      </div>
+                      <div class="checkbox-group">
+                        <input
+                          type="checkbox"
+                          id="unique"
+                          .checked=${this._newColumn.is_unique}
+                          @change=${(e: Event) => {
+                            this._newColumn = {
+                              ...this._newColumn,
+                              is_unique: (e.target as HTMLInputElement).checked
+                            };
+                          }}
+                        />
+                        <label for="unique">Unique</label>
+                      </div>
+                    </div>
+                    <div class="form-actions">
+                      <button class="btn btn-secondary" @click=${this._toggleAddColumn}>
+                        Cancel
+                      </button>
+                      <button 
+                        class="btn btn-primary" 
+                        @click=${this._handleAddColumn}
+                        ?disabled=${!this._newColumn.name.trim()}
                       >
-                        Delete
+                        Add Column
                       </button>
                     </div>
-                  `
-                )}
+                  </div>
+                `
+              : ''}
+
+            <div class="columns-list">
+              ${this._columns.length === 0
+                ? html`<div class="empty-state">
+                    No columns yet. Add a column to define your data structure.
+                  </div>`
+                : this._columns.map(
+                    (column) => html`
+                      <div class="column-card">
+                        <div class="column-info">
+                          <div class="column-name">${column.name}</div>
+                          <div class="column-meta">
+                            ${column.display_name || ''}
+                          </div>
+                        </div>
+                        <div class="column-badges">
+                          <span class="badge badge-type">${column.data_type}</span>
+                          ${column.is_required
+                            ? html`<span class="badge badge-required">Required</span>`
+                            : ''}
+                          ${column.is_unique
+                            ? html`<span class="badge badge-unique">Unique</span>`
+                            : ''}
+                        </div>
+                        <button
+                          class="delete-btn"
+                          @click=${() => this._handleDeleteColumn(column)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    `
+                  )}
+            </div>
+          </div>
+        ` : html`
+          <div class="columns-section">
+            <div class="section-header">
+              <h3>Table Data</h3>
+              <button 
+                class="add-row-btn" 
+                @click=${() => {
+                  this._editingRow = null;
+                  this._showRowForm = true;
+                }}
+              >
+                + Add Row
+              </button>
+            </div>
+            <data-grid
+              .tableName=${this._table.name}
+              .columns=${userColumns.map(c => c.name)}
+              @edit-record=${(e: CustomEvent) => {
+                this._editingRow = e.detail.record;
+                this._showRowForm = true;
+              }}
+              @data-updated=${() => this.requestUpdate()}
+            ></data-grid>
+          </div>
+        `}
+      </div>
+
+      ${this._showRowForm ? html`
+        <div class="modal-overlay" @click=${() => this._showRowForm = false}>
+          <div class="modal-content" @click=${(e: Event) => e.stopPropagation()}>
+            <row-form
+              .tableName=${this._table.name}
+              .columns=${userColumns}
+              .initialData=${this._editingRow}
+              @submit-success=${() => {
+                this._showRowForm = false;
+                this._editingRow = null;
+                this.requestUpdate();
+              }}
+              @cancel=${() => {
+                this._showRowForm = false;
+                this._editingRow = null;
+              }}
+            ></row-form>
           </div>
         </div>
-      </div>
+      ` : ''}
     `;
   }
 }
