@@ -1,0 +1,30 @@
+{
+  "name": "visual-api-builder-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for Visual API Builder",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "playwright test",
+    "lint": "eslint src --ext .ts"
+  },
+  "keywords": ["lit", "web-components", "typescript"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "lit": "^3.1.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.41.2",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.1.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

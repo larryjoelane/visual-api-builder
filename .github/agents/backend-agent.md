@@ -470,6 +470,67 @@ backend/
 - Mock external dependencies (databases, APIs)
 - Test error scenarios thoroughly
 - Achieve >80% code coverage for critical paths
+- **NEW: Verify API responses match frontend expectations (field names, types, required fields)**
+- **NEW: Test that validation errors are clear and actionable for frontend**
+- **NEW: Ensure all frontend test data is created via API (validate API contracts)**
+- **NEW: Test that API doesn't break existing frontend tests**
+
+## Frontend Integration Standards
+
+### API Response Contract Validation
+- Ensure response field names match what frontend expects
+- Return correct data types (strings, numbers, booleans, objects)
+- Include all required fields in responses
+- Use consistent naming conventions (camelCase for JSON fields)
+- Document all response fields in Swagger/OpenAPI
+- Validate that error responses match expected format
+
+### Common API Response Format
+```typescript
+// Standard successful response
+{
+  "data": { /* actual data */ }
+}
+
+// Standard error response
+{
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human readable error message"
+  }
+}
+
+// List response with pagination
+{
+  "data": [ /* items */ ],
+  "pagination": {
+    "total": 100,
+    "page": 1,
+    "limit": 10
+  }
+}
+```
+
+### Validation Error Format
+```typescript
+// Detailed validation errors help frontend debugging
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Request validation failed",
+    "details": [
+      {
+        "path": "tableData.name",
+        "message": "Field is required"
+      },
+      {
+        "path": "tableData.columns",
+        "message": "Must be an array with at least one item"
+      }
+    ]
+  }
+}
+```
 
 ## Common Pitfalls to Avoid
 - Don't create database connections per-request
@@ -479,6 +540,12 @@ backend/
 - Don't log sensitive data
 - Don't use sync operations for I/O
 - Don't forget to clean up resources in hooks
+- **NEW: Don't change API response structure without updating frontend**
+- **NEW: Don't remove required fields from responses that frontend expects**
+- **NEW: Don't change field names in responses (camelCase/snake_case consistency)**
+- **NEW: Don't return ambiguous error messages that don't help frontend debugging**
+- **NEW: Don't create test data via direct database access (use API endpoints) - let frontend test the full flow**
+- **NEW: Don't ignore test failures in frontend - API changes must not break UI tests**
 
 ## Questions to Ask Yourself
 - Is this endpoint using connection pooling?
@@ -489,3 +556,9 @@ backend/
 - Is the response time acceptable under load?
 - Are resources cleaned up properly?
 - Is the API documented in Swagger?
+- **NEW: Does this API response match what the frontend component expects?**
+- **NEW: Would the frontend tests pass if they use this API?**
+- **NEW: Are validation errors clear enough for frontend to show useful messages?**
+- **NEW: Did I run frontend tests after making API changes?**
+- **NEW: Are response field names consistent with frontend expectations?**
+- **NEW: Could a frontend test easily populate test data using this API?**

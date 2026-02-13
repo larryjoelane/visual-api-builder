@@ -3,6 +3,158 @@
 ## Project Overview
 This is a full-stack application with a modern web frontend and a TypeScript-based API backend.
 
+## 🚨 CRITICAL METHODOLOGY: Be Focused and Granular
+
+### NEVER Jump Ahead to Try and Complete Outcomes
+- Fix ONE specific issue at a time
+- Test that ONE thing works before moving on
+- Do NOT implement multiple features in one go
+- Do NOT assume anything works without manual verification
+
+### ALWAYS Follow This Process:
+1. **Identify** - What is the ONE specific issue? (e.g., "add column button doesn't submit")
+2. **Reproduce** - Start servers and verify the issue in browser
+3. **Debug** - Check console, network tab, backend logs
+4. **Fix** - Make ONE focused change
+5. **Test** - Verify that ONE thing now works
+6. **Repeat** - Move to next issue
+
+### Example of GOOD Approach:
+```
+User: "Add column button doesn't work"
+✅ Start backend server
+✅ Start frontend server
+✅ Open browser to http://localhost:5173
+✅ Click add column button
+✅ Check: Does form show? (yes/no)
+✅ Fill form and click submit
+✅ Check: Network tab - is API called? (yes/no)
+✅ Check: Console - any errors? (yes/no)
+✅ Fix the ONE issue found
+✅ Test again until that ONE thing works
+```
+
+### Example of BAD Approach:
+```
+User: "Add column button doesn't work"
+❌ Assume I know what's wrong
+❌ Write code for multiple features
+❌ Don't start servers
+❌ Don't test in browser
+❌ Declare it "should work now"
+❌ Move on to implement new features
+```
+
+## 🎯 CRITICAL: Development Priorities & Feature Completion
+
+### The Core Product Vision
+Users create tables/columns visually → System **automatically generates working REST API endpoints** for those tables → Users can immediately insert/query data via API or UI.
+
+### What "Done" Means
+A feature is NOT done until:
+1. ✅ Backend API endpoint exists and is tested
+2. ✅ Frontend UI component exists and is tested
+3. ✅ Data flows correctly from UI → API → Database → API → UI
+4. ✅ Manual testing confirms the feature works end-to-end
+5. ✅ User can see and interact with the result
+
+### Feature Priority Order (NEVER skip these)
+
+#### Priority 0: Dynamic API Generation (MOST IMPORTANT)
+When a user creates a table named "users" with columns ["name", "email"], the system MUST:
+- Automatically register 5 REST endpoints: `GET /api/v1/users`, `GET /api/v1/users/:id`, `POST /api/v1/users`, `PUT /api/v1/users/:id`, `DELETE /api/v1/users/:id`
+- These endpoints must insert/query/update/delete data in the actual SQLite table
+- Swagger documentation must reflect these endpoints
+- **This is the CORE feature - without this, the product doesn't work**
+
+Implementation requirements:
+- Service to read user tables from the `tables` system table
+- Dynamic route registration in Fastify for each user table
+- Schema validation based on columns defined in `columns` system table
+- CRUD operations that interact with user-created SQLite tables
+
+#### Priority 1: Data Management UI
+Users must be able to:
+- View data rows in a table (grid/spreadsheet view)
+- Add new rows via a form
+- Edit existing rows
+- Delete rows
+- See changes persist to the database
+
+#### Priority 2: End-to-End Validation
+- Create a table via UI
+- Add columns via UI
+- **Insert data via API or UI**
+- **Query data via API or UI**
+- Verify data persists in SQLite
+- Verify Swagger docs are correct
+
+### Anti-Patterns to Avoid
+❌ Building only the meta-schema (tables about tables) without dynamic API generation  
+❌ Moving to "Day 2" features when Day 1 core features don't work  
+❌ Implementing infrastructure without testing the user-facing feature  
+❌ **Assuming a feature is done because the code compiles**  
+❌ Skipping manual testing of the happy path  
+❌ **Jumping ahead to complete outcomes instead of being focused and granular**  
+❌ **Not starting servers to verify features work in the browser**  
+❌ **Assuming buttons/forms work without clicking them**  
+❌ **Implementing multiple features before testing any of them**
+
+### MANDATORY Development Workflow (NEVER SKIP STEPS)
+
+**Before writing any code:**
+1. **Start both servers** (backend and frontend) to test current state
+2. **Identify ONE specific issue** to fix (e.g., "add column button doesn't submit")
+3. **Verify the issue** by testing in browser/Swagger
+
+**When implementing a fix:**
+4. **Make ONE focused change** to address that specific issue
+5. **Refresh browser and test** that exact functionality
+6. **Check browser console** for errors
+7. **Check network tab** to see API requests/responses
+8. **Verify success** - does the button work now? Does data persist?
+
+**Only after verification:**
+9. **Document what was fixed** (briefly)
+10. **Move to the next single issue**
+
+**NEVER:**
+- Write multiple features before testing any
+- Assume code works because it compiled
+- Skip starting servers and clicking buttons
+- Move to a new feature while current one is broken
+
+### Granular Testing Requirements
+
+**For every button click:**
+- Does it trigger an event handler?
+- Does it make an API call? (check Network tab)
+- Does the API return success? (check response)
+- Does the UI update? (check screen)
+- Does data persist? (refresh page or check DB)
+
+**For every API endpoint:**
+- Start backend server
+- Test in Swagger UI or curl
+- Verify response status and body
+- Check database to confirm data changed
+
+**For every UI component:**
+- Start frontend server
+- Load page in browser
+- Open browser DevTools console
+- Click every button and fill every form
+- Check for console errors
+- Verify visual feedback (loading states, error messages)
+
+**When Something Doesn't Work:**
+1. STOP implementing new features
+2. Check browser console for errors
+3. Check network tab for failed requests
+4. Check backend logs for errors
+5. Add console.log statements to debug
+6. Fix the issue before moving on
+
 ## Tech Stack
 
 ### Frontend
