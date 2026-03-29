@@ -1,0 +1,128 @@
+[
+  {
+    "id": "requestTitle",
+    "label": "Request Title",
+    "type": "text",
+    "required": true,
+    "placeholder": "Brief title for your request"
+  },
+  {
+    "id": "requestorName",
+    "label": "Requestor Name",
+    "type": "text",
+    "required": true,
+    "placeholder": "Your full name"
+  },
+  {
+    "id": "requestorEmail",
+    "label": "Requestor Email",
+    "type": "email",
+    "required": true,
+    "placeholder": "your.email@company.com"
+  },
+  {
+    "id": "department",
+    "label": "Department",
+    "type": "select",
+    "required": true,
+    "options": [
+      "",
+      "Engineering",
+      "Product",
+      "IT Operations",
+      "Security",
+      "Data & Analytics",
+      "DevOps",
+      "Other"
+    ]
+  },
+  {
+    "id": "requestType",
+    "label": "Request Type",
+    "type": "select",
+    "required": true,
+    "options": [
+      "",
+      "New Project",
+      "Enhancement",
+      "Bug Fix",
+      "Infrastructure Change",
+      "Access Request",
+      "Cloud Resource Provisioning",
+      "Other"
+    ]
+  },
+  {
+    "id": "priority",
+    "label": "Priority",
+    "type": "select",
+    "required": true,
+    "options": [
+      "",
+      "Critical",
+      "High",
+      "Medium",
+      "Low"
+    ]
+  },
+  {
+    "id": "azureService",
+    "label": "Azure Service / Resource Area",
+    "type": "select",
+    "required": false,
+    "options": [
+      "",
+      "Azure App Service",
+      "Azure Functions",
+      "Azure DevOps Pipelines",
+      "Azure SQL Database",
+      "Azure Storage",
+      "Azure Kubernetes Service (AKS)",
+      "Azure Virtual Machines",
+      "Azure Active Directory",
+      "Azure Key Vault",
+      "Azure Monitor / Log Analytics",
+      "Other / Not Sure"
+    ]
+  },
+  {
+    "id": "description",
+    "label": "Description",
+    "type": "textarea",
+    "required": true,
+    "placeholder": "Describe the request in detail — what do you need and why?"
+  },
+  {
+    "id": "businessJustification",
+    "label": "Business Justification",
+    "type": "textarea",
+    "required": true,
+    "placeholder": "Why is this request needed? What business problem does it solve?"
+  },
+  {
+    "id": "targetDate",
+    "label": "Target Completion Date",
+    "type": "date",
+    "required": false
+  },
+  {
+    "id": "environment",
+    "label": "Target Environment",
+    "type": "select",
+    "required": false,
+    "options": [
+      "",
+      "Development",
+      "Staging",
+      "Production",
+      "All Environments"
+    ]
+  },
+  {
+    "id": "additionalNotes",
+    "label": "Additional Notes / Attachments Info",
+    "type": "textarea",
+    "required": false,
+    "placeholder": "Any additional context, links, or references"
+  }
+]
